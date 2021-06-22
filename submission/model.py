@@ -1,8 +1,8 @@
 import os
-import torch
-from torch import nn
 
 import numpy as np
+import torch
+from torch import nn
 from torchvision.models.resnet import conv3x3
 
 
@@ -36,7 +36,8 @@ class BasicBlock(nn.Module):
 class Dronet(nn.Module):
     """
     A class used to define action regressor model based on Dronet arch.
-    Loquercio, Antonio, et al. "Dronet: Learning to fly by driving." IEEE Robotics and Automation Letters 3.2 (2018): 1088-1095.
+    Loquercio, Antonio, et al. "Dronet: Learning to fly by driving." IEEE Robotics and Automation Letters
+    3.2 (2018): 1088-1095.
     ...
     Methods
     -------
@@ -87,7 +88,6 @@ class Dronet(nn.Module):
 
         # predicting if the bot should speed up or slow down
         self.speed_up_channel = nn.Sequential(nn.Linear(self.num_feats_extracted, 1))
-
 
         # Max steering angle, minimum velocity and maximum velocity parameters
         self.max_steering = max_steering

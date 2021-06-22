@@ -1,29 +1,28 @@
 #!/usr/bin/env python3
+import io
 import os
 
 import numpy as np
 import torch
+from PIL import Image
 
-from aido_schemas import EpisodeStart, protocol_agent_DB20, PWMCommands, DB20Commands, LEDSCommands, RGB, \
-    wrap_direct, Context, DB20Observations, JPGImage, logger
-
+from aido_schemas import (Context, DB20Commands, DB20Observations, EpisodeStart, JPGImage, LEDSCommands,
+                          logger, protocol_agent_DB20, PWMCommands, RGB, wrap_direct)
+from helpers import SteeringToWheelVelWrapper
 from model import Dronet
 from wrappers import DTPytorchWrapper
-from helpers import SteeringToWheelVelWrapper
-from PIL import Image
-import io
 
 
 class PytorchRLTemplateAgent:
     def __init__(self, load_model=False, model_path=None):
         logger.info('PytorchRLTemplateAgent init')
         self.preprocessor = DTPytorchWrapper()
-        self.image_size = (120,160, 3)
-        self.wrapper  = SteeringToWheelVelWrapper()
+        self.image_size = (120, 160, 3)
+        self.wrapper = SteeringToWheelVelWrapper()
         self.model = Dronet()
         self._device = self.model._device
         self.model.to(self._device)
-        self.current_image = np.zeros((3,self.image_size[0],self.image_size[1]))
+        self.current_image = np.zeros((3, self.image_size[0], self.image_size[1]))
 
         if load_model:
             logger.info('PytorchRLTemplateAgent loading models')
@@ -48,7 +47,6 @@ class PytorchRLTemplateAgent:
                 msg = 'I need a GPU; bailing.'
                 context.error(msg)
                 raise Exception(msg)
-
 
     def on_received_seed(self, data: int):
         np.random.seed(data)
@@ -89,6 +87,7 @@ def jpg2rgb(image_data: bytes) -> np.ndarray:
     assert data.ndim == 3
     assert data.dtype == np.uint8
     return data
+
 
 def main():
     node = PytorchRLTemplateAgent(load_model=True, model_path="model_lf.pt")
