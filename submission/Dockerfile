@@ -1,9 +1,9 @@
 # Definition of Submission container
-ARG AIDO_REGISTRY
+ARG DOCKER_REGISTRY
 ARG ARCH="amd64"
 ARG MAJOR=daffy
 ARG BASE_TAG=${MAJOR}-${ARCH}
-FROM ${AIDO_REGISTRY}/duckietown/dt-machine-learning-base-environment:${BASE_TAG}
+FROM ${DOCKER_REGISTRY}/duckietown/dt-machine-learning-base-environment:${BASE_TAG}
 
 # DO NOT MODIFY: your submission won't run if you do
 RUN apt-get update -y && apt-get install -y --no-install-recommends \
