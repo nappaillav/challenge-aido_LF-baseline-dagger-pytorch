@@ -52,8 +52,8 @@ $ python -m learning.test
 * `--num-outputs` integer specifying the number of outputs the model has, defaults to 2.
 * `--map-name` or `-m` string  specifying which map to use for training, defaults to loop_empty.
 
-## Submitting 
-* Copy trained model files into submission/models directory and then use [duckietown shell](https://github.com/duckietown/duckietown-shell) to submit. 
+## Submitting
+* Copy trained model files into submission/models directory and then use [duckietown shell](https://github.com/duckietown/duckietown-shell) to submit.
 * For more information on submitting check [duckietown shell documentation](https://docs.duckietown.org/DT19/AIDO/out/cli.html).
 
 ## Acknowledgment
@@ -69,7 +69,7 @@ $ python -m learning.test
 
 ## References
 
-``` 
+```
 
 @phdthesis{diaz2018interactive,
   title={Interactive and Uncertainty-aware Imitation Learning: Theory and Applications},

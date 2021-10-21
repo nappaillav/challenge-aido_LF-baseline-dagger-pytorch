@@ -82,9 +82,7 @@ class Dronet(nn.Module):
 
         self.num_feats_extracted = 2560
         # predicting steering angle
-        self.steering_angle_channel = nn.Sequential(
-            nn.Linear(self.num_feats_extracted, 1)
-        )
+        self.steering_angle_channel = nn.Sequential(nn.Linear(self.num_feats_extracted, 1))
 
         # predicting if the bot should speed up or slow down
         self.speed_up_channel = nn.Sequential(nn.Linear(self.num_feats_extracted, 1))
@@ -126,9 +124,7 @@ class Dronet(nn.Module):
         images = args[0]
         is_speed_up, steering_angle = self.forward(images)
         is_speed_up = torch.sigmoid(is_speed_up)
-        v_tensor = (is_speed_up) * self.max_velocity_tensor + (
-            1 - is_speed_up
-        ) * self.min_velocity_tensor
+        v_tensor = (is_speed_up) * self.max_velocity_tensor + (1 - is_speed_up) * self.min_velocity_tensor
         steering_angle = steering_angle * self.max_steering
         output = torch.cat((v_tensor, steering_angle), 1).squeeze().detach()
         return output.cpu().numpy().flatten()

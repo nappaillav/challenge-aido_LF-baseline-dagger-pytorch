@@ -2,13 +2,11 @@ import numpy as np
 
 
 class SteeringToWheelVelWrapper:
-    """ Converts policy that was trained with [velocity|heading] actions to
+    """Converts policy that was trained with [velocity|heading] actions to
     [wheelvel_left|wheelvel_right] to comply with AIDO evaluation format
     """
 
-    def __init__(
-        self, gain=1.0, trim=0.0, radius=0.0318, k=27.0, limit=1.0, wheel_dist=0.102
-    ):
+    def __init__(self, gain=1.0, trim=0.0, radius=0.0318, k=27.0, limit=1.0, wheel_dist=0.102):
         # Should be adjusted so that the effective speed of the robot is 0.2 m/s
         self.gain = gain
 
