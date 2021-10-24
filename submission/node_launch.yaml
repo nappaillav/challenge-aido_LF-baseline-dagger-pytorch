@@ -1,0 +1,5 @@
+node: solution.PytorchRLTemplateAgent
+protocol: aido_schemas.protocol_agent_DB20_timestamps
+config:
+  load_model: true
+  model_path: model_lf.pt

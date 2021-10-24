@@ -31,15 +31,11 @@ RUN python3 -m pip uninstall -y dataclasses
 
 # let's copy all our solution files to our workspace
 # if you have more file use the COPY command to move them to the workspace
-COPY solution.py /workspace
-COPY helpers.py /workspace
-COPY models /workspace/models
-COPY model.py /workspace
-COPY wrappers.py /workspace
-
+COPY *.py .
+COPY node_launch.yaml .
 # we make the workspace our working directory
 
 
-RUN python3 -c "import solution; import wrappers; import model; import helpers;"
+RUN node-launch --config node_launch.yaml --check
 
-CMD python3 solution.py
+ENTRYPOINT ["node-launch", "--config", "node_launch.yaml"]
