@@ -1,3 +1,9 @@
+import numpy as np
+import os
+from PIL import Image
+
+RISK_THRESHOLD = 0.5
+
 class InteractiveImitationLearning:
     """
     A class used to contain main imitation learning algorithm
@@ -28,6 +34,8 @@ class InteractiveImitationLearning:
         self.teacher = teacher
         self.learner = learner
         self.test = test
+        self.observation_save_path = "/home/plparent/challenge-aido_LF-baseline-dagger-pytorch/learning/results"
+        self.observation_num = 0
 
         # from IIL
         self._horizon = horizon
@@ -107,6 +115,10 @@ class InteractiveImitationLearning:
         return control_action
 
     def _query_expert(self, control_policy, control_action, observation):
+        if abs(control_action[2]) >= RISK_THRESHOLD and not self.test:
+            control_policy = self.teacher
+            control_action = self.teacher.predict(observation)
+
         if control_policy == self.learner:
             self.learner_action = control_action
         else:
@@ -128,10 +140,22 @@ class InteractiveImitationLearning:
     def _mix(self):
         raise NotImplementedError()
 
+    def _inject_noise(self, action):
+        omega_noise = np.clip(action[1] + np.random.normal(), -np.pi/2, np.pi/2)
+        return [action[0], omega_noise, omega_noise - action[1]]
+
     def _aggregate(self, observation, action):
         if not (self.test):
             self._observations.append(observation)
             self._expert_actions.append(action)
+            self._observations.append(observation)
+            self._expert_actions.append(self._inject_noise(action))
+        else:            
+            img = Image.fromarray(observation, 'RGB')
+            name = 'observation' + str(self.observation_num) + policy_str + 'learner.png'
+            
+            img.save(os.path.join(self.observation_save_path, name))
+            self.observation_num += 1
 
     def _optimize(self):
         if not (self.test):

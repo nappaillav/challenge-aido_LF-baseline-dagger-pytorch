@@ -103,9 +103,10 @@ class PurePursuitPolicy:
             velocity = 0
             omega = 0
 
-        action = [velocity, omega]
+        action = [velocity, omega, 0]
 
         return action
+
 
     def _get_projected_angle_difference(self, lookup_distance):
         # Find the projection along the path

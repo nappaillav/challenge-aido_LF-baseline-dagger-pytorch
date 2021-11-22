@@ -48,12 +48,12 @@ class Dronet(nn.Module):
         takes images as input and predict the action space unnormalized
     """
 
-    def __init__(self, num_outputs=2, max_velocity=0.7, max_steering=np.pi / 2):
+    def __init__(self, num_outputs=3, max_velocity=0.7, max_steering=np.pi / 2):
         """
         Parameters
         ----------
         num_outputs : int
-            number of outputs of the action space (default 2)
+            number of outputs of the action space (default 3)
         max_velocity : float
             the maximum velocity used by the teacher (default 0.7)
         max_steering : float
@@ -86,6 +86,9 @@ class Dronet(nn.Module):
         # predicting if the bot should speed up or slow down
         self.speed_up_channel = nn.Sequential(nn.Linear(self.num_feats_extracted, 1))
 
+	# predicting the risk factor of state-action pair
+        self.risk_channel = nn.Sequential(nn.Linear(self.num_feats_extracted, 1))
+
         # Decaying speed up loss parameters
         self.decay = 1 / 10
         self.epoch_0 = 10
@@ -112,7 +115,8 @@ class Dronet(nn.Module):
         features = self.feature_extractor(images)
         steering_angle = self.steering_angle_channel(features)
         is_speed_up = self.speed_up_channel(features)
-        return is_speed_up, steering_angle
+        risk = self.risk_channel(features)
+        return is_speed_up, steering_angle, risk
 
     def loss(self, *args):
         """
@@ -127,14 +131,15 @@ class Dronet(nn.Module):
         """
         self.train()
         images, target = args
-        is_speed_up, steering_angle = self.forward(images)
+        is_speed_up, steering_angle, risk = self.forward(images)
         criterion_v = nn.BCEWithLogitsLoss()
         speed_up = (
             (target[:, 0] > self.min_velocity).float().unsqueeze(1)
         )  # 0 for expert speeding up and 1 for slowing down for a corner or an incoming duckbot
         loss_steering_angle = F.mse_loss(steering_angle, target[:, 1].unsqueeze(1), reduction="mean")
+        loss_risk = F.mse_loss(risk, target[:, 2].unsqueeze(1), reduction="mean")
         loss_v = criterion_v(is_speed_up, speed_up)
-        loss = loss_steering_angle + loss_v * max(0, 1 - np.exp(self.decay * (self.epoch - self.epoch_0)))
+        loss = loss_risk + loss_steering_angle + loss_v * max(0, 1 - np.exp(self.decay * (self.epoch - self.epoch_0)))
         return loss
 
     def predict(self, *args):
@@ -149,11 +154,11 @@ class Dronet(nn.Module):
             action having velocity and omega of shape (batch_size, 2)
         """
         images = args[0]
-        is_speed_up, steering_angle = self.forward(images)
+        is_speed_up, steering_angle, risk = self.forward(images)
         is_speed_up = torch.sigmoid(is_speed_up)
         v_tensor = (is_speed_up) * self.max_velocity_tensor + (1 - is_speed_up) * self.min_velocity_tensor
         steering_angle = steering_angle * self.max_steering
-        output = torch.cat((v_tensor, steering_angle), 1).squeeze().detach()
+        output = torch.cat((v_tensor, steering_angle, risk), 1).squeeze().detach()
         return output.cpu().numpy()
 
 

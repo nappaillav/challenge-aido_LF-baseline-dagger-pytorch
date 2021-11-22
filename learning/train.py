@@ -67,7 +67,7 @@ if __name__ == "__main__":
     model = Dronet(num_outputs=config.num_outputs, max_velocity=max_velocity)
     policy_optimizer = torch.optim.Adam(model.parameters(), lr=learning_rates[config.learning_rate])
 
-    dataset = MemoryMapDataset(25000, (3, *input_shape), (2,), config.save_path)
+    dataset = MemoryMapDataset(25000, (3, *input_shape), (3,), config.save_path)
     learner = NeuralNetworkPolicy(
         model=model,
         optimizer=policy_optimizer,
