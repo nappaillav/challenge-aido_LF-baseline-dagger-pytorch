@@ -2,7 +2,11 @@
 
 ## Introduction
 
-This is the updated version of the Dagger Baseline with the thriftyDagger, feature such as additional maps, novelty/risk based data collection is added. Currently the Novelty part is added. I'm still working on the 
+This is the updated version of the pytorch Dagger Baseline with the thriftyDagger feature such as novelty/risk, along with additional maps is also added. Currently the Novelty part is complete. But I'm  working on the risk implementation. 
+
+* Novelty : Here for this duckietown implementation I'm using 3 model ensemble actor to identify the novelty
+* Risk : The q_learning Function approximator will be added to the code base. (TODO)
+* Additional maps are added, which is inside the `learning/maps`, place them inside the gym-duckietown folder before running the experiment. 
 
 ## Quick start
 
