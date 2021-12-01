@@ -2,8 +2,7 @@
 
 ## Introduction
 
-In this baseline we train a small squeezenet model on expert trajectories to simply clone the behavior of the expert.
-Using only the expert trajectories would result in a model unable to recover from non-optimal positions; Instead, we use a technique called DAgger: a dataset aggregation technique with mixed policies between expert and model.
+This is the updated version of the Dagger Baseline with the thrifyDagger feature such as novelty and risk is added. Currently the Novelty part is added. I'm still working on the 
 
 ## Quick start
 
@@ -58,14 +57,8 @@ $ python -m learning.test
 
 ## Acknowledgment
 
-* We started from previous work done by Manfred Díaz as a boilerplate, and we would like to thank him for his full support with code and answering our questions.
+* We started from previous work done by Manfred Díaz and Mostafa ElAraby  as a boilerplate, and we would like to thank him for his full support with code and answering our questions.
 
-## Authors
-
-* [Mostafa ElAraby ](https://www.mostafaelaraby.com/)
-  + [Linkedin](https://linkedin.com/in/mostafaelaraby)
-* Ramon Emiliani
-  + [Linkedin](https://www.linkedin.com/in/ramonemiliani)
 
 ## References
 
@@ -96,4 +89,12 @@ $ python -m learning.test
   year={2018},
   publisher={IEEE}
 }
+
+@article{hoque2021thriftydagger,
+  title={ThriftyDAgger: Budget-aware novelty and risk gating for interactive imitation learning},
+  author={Hoque, Ryan and Balakrishna, Ashwin and Novoseller, Ellen and Wilcox, Albert and Brown, Daniel S and Goldberg, Ken},
+  journal={arXiv preprint arXiv:2109.08273},
+  year={2021}
+}
+
 ```
