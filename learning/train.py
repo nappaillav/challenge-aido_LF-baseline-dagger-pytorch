@@ -3,7 +3,7 @@ from gym_duckietown.envs import DuckietownEnv
 import argparse
 
 from .teacher import PurePursuitPolicy
-from .learner import NeuralNetworkPolicy
+from .learner import NeuralNetworkPolicy_thrifty
 from .model import Dronet
 from .algorithms import DAgger
 from .utils import MemoryMapDataset
@@ -63,12 +63,12 @@ if __name__ == "__main__":
 
     task_horizon = config.horizon
     task_episode = config.episode
-
-    model = Dronet(num_outputs=config.num_outputs, max_velocity=max_velocity)
-    policy_optimizer = torch.optim.Adam(model.parameters(), lr=learning_rates[config.learning_rate])
+    num_ensemble = 3
+    model = [Dronet(num_outputs=config.num_outputs, max_velocity=max_velocity) for i in range(num_ensemble)]
+    policy_optimizer = [torch.optim.Adam(model[i].parameters(), lr=learning_rates[config.learning_rate]) for i in range(num_ensemble)]
 
     dataset = MemoryMapDataset(25000, (3, *input_shape), (2,), config.save_path)
-    learner = NeuralNetworkPolicy(
+    learner = NeuralNetworkPolicy_thrifty(
         model=model,
         optimizer=policy_optimizer,
         storage_location=config.save_path,
@@ -77,6 +77,7 @@ if __name__ == "__main__":
         input_shape=input_shape,
         max_velocity=max_velocity,
         dataset=dataset,
+        # model_path='/content/drive/MyDrive/LF_Duckietown/challenge-aido_LF-baseline-dagger-pytorch/imitation_baseline/model.pt',
     )
 
     algorithm = DAgger(
@@ -88,6 +89,14 @@ if __name__ == "__main__":
         alpha=mixing_decays[config.decay],
     )
 
-    algorithm.train(debug=True)  # DEBUG to show simulation
+    algorithm.train(debug=False)  # DEBUG to show simulation
 
-    environment.close()
+    print('<===== Done ====>')
+
+    if environment is not None:
+        try:
+            environment.window.close()
+            environment.close()
+        except:
+            pass
+

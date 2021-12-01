@@ -1,10 +1,11 @@
 
 protocol: aido2_db18_agent-z2
-user-label: "baseline-dagger-pytorch"
+challenge:
+  - aido-LF-sim-validation
+user-label: "dagger-with-maps-novelty-added"
 user-payload:
     features_required:
         gpu: 1
 description: |
-    This is a simple baseline solution for an agent learns to imitate behavior from logs
-     [This code is documented here](https://docs.duckietown.org/daffy/AIDO/out/pytorch_template.html).
-validation_challenge: aido-hello-sim-validation
+    Added more maps with the current baseline approach to learn better
+validation_challenge: aido-LF-sim-validation

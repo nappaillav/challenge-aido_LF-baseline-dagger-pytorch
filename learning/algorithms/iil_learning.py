@@ -1,3 +1,17 @@
+import cv2
+from gym_duckietown.envs import DuckietownEnv
+import math 
+import numpy as np
+
+def launch_env(map_name, randomize_maps_on_reset=False, domain_rand=False):
+    environment = DuckietownEnv(
+        domain_rand=domain_rand,
+        max_steps=math.inf,
+        map_name=map_name,
+        randomize_maps_on_reset=False,
+    )
+    return environment
+
 class InteractiveImitationLearning:
     """
     A class used to contain main imitation learning algorithm
@@ -32,7 +46,7 @@ class InteractiveImitationLearning:
         # from IIL
         self._horizon = horizon
         self._episodes = episodes
-
+        self._horizon_factor = 1.04
         # data
         self._observations = []
         self._expert_actions = []
@@ -68,11 +82,39 @@ class InteractiveImitationLearning:
             number of episodes which is the number of collected trajectories
         """
         self._debug = debug
+        possible_maps = ['ETHZ_autolab_technical_track',
+                        'LF-norm-loop',
+                        'LF-norm-small_loop',
+                        'LF-norm-techtrack',
+                        'LF-norm-zigzag',
+                        # '_custom_technical_floor',
+                        # '_huge_C_floor',
+                        # '_huge_V_floor',
+                        # '_loop_duckiebots',
+                        # '_loop_duckies',
+                        # '_loop_dyn_duckiebots',
+                        # '_myTestA',
+                        # '_plus_floor',
+                        # 'huge_loop',
+                        # 'huge_loop2',
+                        # 'multi_track',
+                        # 'multi_track2'
+                        ]
         for episode in range(self._episodes):
+            print('-> Episode : {}'.format(episode))
+            map_name = np.random.choice(possible_maps)
+            print('-> Map Name : {}'.format(map_name))
+            self.environment = launch_env(
+                map_name,
+                domain_rand=False,
+                randomize_maps_on_reset=False,
+            )
             self._episode = episode
             self._sampling()
             self._optimize()  # episodic learning
             self._on_episode_done()
+            self._horizon = int(self._horizon_factor * self._horizon)
+
 
     def _sampling(self):
         observation = self.environment.render_obs()
@@ -87,11 +129,13 @@ class InteractiveImitationLearning:
                 print(e)
             if self._debug:
                 self.environment.render()
+                if self.test:
+                    cv2.imwrite('/content/drive/MyDrive/LF_Duckietown/out/{}_{}.png'.format(self._episode, horizon), observation)
             observation = next_observation
 
     # execute current control policy
     def _act(self, observation):
-        if self._episode <= 1:  # initial policy equals expert's
+        if self._episode <= 4:  # initial policy equals expert's
             control_policy = self.teacher
         else:
             control_policy = self._mix()
@@ -108,16 +152,17 @@ class InteractiveImitationLearning:
 
     def _query_expert(self, control_policy, control_action, observation):
         if control_policy == self.learner:
-            self.learner_action = control_action
+            self.learner_action = control_action    
         else:
             self.learner_action = self.learner.predict(observation)
+        var = self.learner.variance 
 
         if control_policy == self.teacher:
             self.teacher_action = control_action
         else:
             self.teacher_action = self.teacher.predict(observation)
 
-        if self.teacher_action is not None:
+        if self.teacher_action is not None or var > 0.15: 
             self._aggregate(observation, self.teacher_action)
 
         if self.teacher_action[0] < 0.1:
@@ -149,3 +194,4 @@ class InteractiveImitationLearning:
         for listener in self._episode_done_listeners:
             listener.episode_done(self._episode)
         self.environment.reset()
+

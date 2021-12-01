@@ -96,7 +96,7 @@ def jpg2rgb(image_data: bytes) -> np.ndarray:
 
 
 def main():
-    node = PytorchRLTemplateAgent(load_model=True, model_path="model_lf.pt")
+    node = PytorchRLTemplateAgent(load_model=True, model_path="model.pt")
     protocol = protocol_agent_DB20
     wrap_direct(node=node, protocol=protocol)
 

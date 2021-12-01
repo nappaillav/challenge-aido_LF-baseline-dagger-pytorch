@@ -1,8 +1,8 @@
-opencv-python
-numpy
+#opencv-python
+#numpy
 aido-protocols-daffy
 duckietown-world-daffy
 duckietown-challenges-daffy
-pillow
-torch
-torchvision
+#pillow
+#torch
+#torchvision
