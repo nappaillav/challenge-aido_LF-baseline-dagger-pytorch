@@ -2,7 +2,7 @@
 
 ## Introduction
 
-This is the updated version of the Dagger Baseline with the thriftyDagger, feature such as novelty and risk is added. Currently the Novelty part is added. I'm still working on the 
+This is the updated version of the Dagger Baseline with the thriftyDagger, feature such as additional maps, novelty/risk based data collection is added. Currently the Novelty part is added. I'm still working on the 
 
 ## Quick start
 
