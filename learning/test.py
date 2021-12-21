@@ -13,13 +13,15 @@ def process_args():
     parser.add_argument("--num-outputs", "-n", default=2, type=int)
     parser.add_argument("--model-path", "-mp", default="", type=str)
     parser.add_argument("--map-name", "-m", default="loop_empty", type=str)
+    parser.add_argument("--save-observations", "-so", action="store_true")
+    parser.add_argument("--save-observations-path", "-sop", default="./learning/observations_sim", type=str)
     return parser
 
 
 if __name__ == "__main__":
     parser = process_args()
     input_shape = (120, 160)
-    max_velocity = 0.7
+    max_velocity = 0.5
 
     config = parser.parse_args()
     # launching environment and testing on different maps using map randomization
@@ -27,6 +29,9 @@ if __name__ == "__main__":
 
     task_horizon = config.horizon
     task_episode = config.episode
+
+    save_observs = False #config.save_observations
+    save_observs_path  = config.save_observations_path
 
     if not (os.path.isfile(config.model_path)):
         raise Exception("Model File not found")
@@ -49,6 +54,8 @@ if __name__ == "__main__":
         learner=learner,
         horizon=task_horizon,
         episodes=task_episode,
+        save_observs = save_observs,
+        save_observs_path = save_observs_path,
         alpha=0,
         test=True,
     )
