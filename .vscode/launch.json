@@ -1,0 +1,49 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    //./imitation_baseline/model.pt",
+    "version": "0.2.0",
+    "configurations": [
+        
+        {
+            "name": "Python: Train",
+            "type": "python",
+            "request": "launch",
+            "module": "learning.train",
+            "args": [
+                "--save-path",
+                "./imitation_baseline",
+                "--num-outputs",
+                "2",
+                "--map-name",
+                "loop_empty",
+                "--episode",
+                "10",
+                "--horizon",
+                "128",
+            ]
+        }
+    ,
+    
+        {
+            "name": "Python: Test",
+            "type": "python",
+            "request": "launch",
+            "module": "learning.test",
+            "args": [
+                "--model-path",
+                "./imitation_baseline/model.pt",
+                "--num-outputs",
+                "2",
+                "--map-name",
+                "loop_empty",
+                "--episode",
+                "20",
+                "--horizon",
+                "128"
+
+            ]
+        }
+    ]
+}

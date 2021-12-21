@@ -2,7 +2,7 @@ import math
 from .iil_learning import InteractiveImitationLearning
 import numpy as np
 
-
+import os
 class DAgger(InteractiveImitationLearning):
     """
     DAgger algorithm to mix policies between learner and expert
@@ -14,7 +14,7 @@ class DAgger(InteractiveImitationLearning):
         used to return a policy teacher / expert based on random choice and safety checks
     """
 
-    def __init__(self, env, teacher, learner, horizon, episodes, alpha=0.5, test=False):
+    def __init__(self, env, teacher, learner, horizon, episodes, save_observs,  save_observs_path, alpha=0.5, test=False):
         InteractiveImitationLearning.__init__(self, env, teacher, learner, horizon, episodes, test)
         # expert decay
         self.p = alpha
@@ -27,6 +27,17 @@ class DAgger(InteractiveImitationLearning):
         # threshold on angle and distance from the lane when using the model to avoid going off track and env reset within an episode
         self.angle_limit = np.pi / 8
         self.distance_limit = 0.12
+
+
+        self.save_observations = save_observs
+        self.observation_num = 0
+        self.observation_save_path = save_observs_path#"/home/dmhum/duckie/challenge-aido_LF-baseline-dagger-pytorch/learning/observations_test"
+
+
+        if not(os.path.exists(self.observation_save_path)):
+            os.mkdir(self.observation_save_path)
+        self.observation_teacher_path = os.path.join(self.observation_save_path, "teacher")
+        self.observation_learner_path = os.path.join(self.observation_save_path, "learner")
 
     def _mix(self):
         control_policy = np.random.choice(a=[self.teacher, self.learner], p=[self.alpha, 1.0 - self.alpha])

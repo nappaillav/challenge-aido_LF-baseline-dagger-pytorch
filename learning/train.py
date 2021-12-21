@@ -36,6 +36,8 @@ def process_args():
     parser.add_argument("--num-outputs", "-n", default=2, type=int)
     parser.add_argument("--domain-rand", "-dr", action="store_true")
     parser.add_argument("--randomize-map", "-rm", action="store_true")
+    parser.add_argument("--save-observations", "-so", action="store_true")
+    parser.add_argument("--save-observations-path", "-sop", default="./learning/observations_sim", type=str)
     return parser
 
 
@@ -64,6 +66,11 @@ if __name__ == "__main__":
     task_horizon = config.horizon
     task_episode = config.episode
 
+    save_observs = True #config.save_observations
+
+    save_observs_path  = config.save_observations_path
+
+
     model = Dronet(num_outputs=config.num_outputs, max_velocity=max_velocity)
     policy_optimizer = torch.optim.Adam(model.parameters(), lr=learning_rates[config.learning_rate])
 
@@ -85,6 +92,8 @@ if __name__ == "__main__":
         learner=learner,
         horizon=task_horizon,
         episodes=task_episode,
+        save_observs = save_observs,
+        save_observs_path = save_observs_path,
         alpha=mixing_decays[config.decay],
     )
 

@@ -1,3 +1,6 @@
+import os
+import cv2
+from PIL import Image
 class InteractiveImitationLearning:
     """
     A class used to contain main imitation learning algorithm
@@ -109,11 +112,14 @@ class InteractiveImitationLearning:
     def _query_expert(self, control_policy, control_action, observation):
         if control_policy == self.learner:
             self.learner_action = control_action
+            self.teacher_action = None
+            self.view_learner_observation(observation)
         else:
             self.learner_action = self.learner.predict(observation)
 
         if control_policy == self.teacher:
             self.teacher_action = control_action
+            self.view_teacher_observation(observation)
         else:
             self.teacher_action = self.teacher.predict(observation)
 
@@ -127,6 +133,42 @@ class InteractiveImitationLearning:
 
     def _mix(self):
         raise NotImplementedError()
+
+    def view_teacher_observation(self, observation):
+        input_shape = (160, 120)
+        observation = cv2.resize(observation, dsize=input_shape[::-1])
+        img = Image.fromarray(observation, 'RGB')
+
+        if (self.active_policy):
+            policy_str = "teacher"
+        else:
+            policy_str = "learner"
+        name = 'observation' + str(self.observation_num) + policy_str + '.png'
+        
+        if self.save_observations:
+            if not(os.path.exists(self.observation_teacher_path)):
+                os.mkdir(self.observation_teacher_path)
+            img.save(os.path.join(self.observation_teacher_path, name))
+            self.observation_num += 1
+        
+
+    def view_learner_observation(self, observation):
+        input_shape = (160, 120)
+        observation = cv2.resize(observation, dsize=input_shape[::-1])
+        img = Image.fromarray(observation, 'RGB')
+
+        if (self.active_policy):
+            policy_str = "teacher"
+        else:
+            policy_str = "learner"
+        name = 'observation' + str(self.observation_num) + policy_str + '.png'
+        
+        if self.save_observations:
+            if not(os.path.exists(self.observation_learner_path)):
+                os.mkdir(self.observation_learner_path)
+            img.save(os.path.join(self.observation_learner_path, name))
+            self.observation_num += 1
+
 
     def _aggregate(self, observation, action):
         if not (self.test):
