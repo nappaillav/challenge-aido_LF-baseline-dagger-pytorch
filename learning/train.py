@@ -60,7 +60,7 @@ if __name__ == "__main__":
     environment = launch_env(
         config.map_name,
         domain_rand=config.domain_rand,
-        randomize_maps_on_reset=config.randomize_map,
+        randomize_maps_on_reset=False#config.randomize_map,
     )
 
     task_horizon = config.horizon

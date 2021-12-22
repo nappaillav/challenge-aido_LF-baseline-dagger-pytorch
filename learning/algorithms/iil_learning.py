@@ -1,6 +1,7 @@
 import os
 import cv2
 from PIL import Image
+import json
 class InteractiveImitationLearning:
     """
     A class used to contain main imitation learning algorithm
@@ -72,10 +73,23 @@ class InteractiveImitationLearning:
         """
         self._debug = debug
         for episode in range(self._episodes):
+            print("Episode ", episode)
             self._episode = episode
             self._sampling()
             self._optimize()  # episodic learning
             self._on_episode_done()
+        print("Number of learner actions:", self.learner_calls)
+        print("Number of teacher actions", self.expert_calls)
+        print("Teacher portion", self.expert_calls/(self.expert_calls + self.learner_calls))
+
+        res = {}
+        res["expert_actions"] = self.expert_calls
+        res["learner_actions"] = self.learner_calls
+        res["expert_portion"] = self.expert_calls/(self.expert_calls + self.learner_calls)
+
+        with open("action_number.json", "w") as f:
+            json.dump(res, f)
+
 
     def _sampling(self):
         observation = self.environment.render_obs()

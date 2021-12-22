@@ -39,6 +39,9 @@ class DAgger(InteractiveImitationLearning):
         self.observation_teacher_path = os.path.join(self.observation_save_path, "teacher")
         self.observation_learner_path = os.path.join(self.observation_save_path, "learner")
 
+        self.expert_calls = 0
+        self.learner_calls = 0
+
     def _mix(self):
         control_policy = np.random.choice(a=[self.teacher, self.learner], p=[self.alpha, 1.0 - self.alpha])
         if self._found_obstacle:
@@ -56,6 +59,12 @@ class DAgger(InteractiveImitationLearning):
             # control back to the expert
             if abs(lp.dist) > self.distance_limit or abs(lp.angle_rad) > self.angle_limit:
                 return self.teacher
+
+
+        if control_policy == self.learner:
+            self.learner_calls += 1
+        elif control_policy == self.teacher:
+            self.expert_calls += 1
         return control_policy
 
     def _on_episode_done(self):
