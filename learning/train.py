@@ -38,6 +38,7 @@ def process_args():
     parser.add_argument("--randomize-map", "-rm", action="store_true")
     parser.add_argument("--save-observations", "-so", action="store_true")
     parser.add_argument("--save-observations-path", "-sop", default="./learning/observations_sim", type=str)
+    parser.add_argument("--save-observations-autoencoder", "-soa", default="./learning/autoencoder_sim", type=str)
     return parser
 
 
@@ -69,6 +70,7 @@ if __name__ == "__main__":
     save_observs = True #config.save_observations
 
     save_observs_path  = config.save_observations_path
+    save_observs_autoencoder = config.save_observations_autoencoder
 
 
     model = Dronet(num_outputs=config.num_outputs, max_velocity=max_velocity)
@@ -94,6 +96,7 @@ if __name__ == "__main__":
         episodes=task_episode,
         save_observs = save_observs,
         save_observs_path = save_observs_path,
+        save_observs_autoencoder = save_observs_autoencoder,
         alpha=mixing_decays[config.decay],
     )
 

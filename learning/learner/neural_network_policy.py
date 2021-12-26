@@ -10,7 +10,36 @@ from torch.utils.tensorboard import SummaryWriter
 
 from PIL import Image
 
+class AE(torch.nn.Module):
+    def __init__(self):
+        super().__init__()        
+        # N, 1, 160, 120
+        self.encoder = torch.nn.Sequential(
+            torch.nn.Conv2d(1, 16, 3, stride=2, padding=1), # -> N, 16, 80,  60
+            torch.nn.ReLU(),
+            torch.nn.Conv2d(16, 32, 3, stride=2, padding=1), # -> N, 32, 40, 30
+            torch.nn.ReLU(),
+            torch.nn.Conv2d(32, 64, 3, stride=2, padding=1), # -> N, 32, 20, 15
+            torch.nn.ReLU(),
+            torch.nn.Conv2d(64, 128, 15) # -> N, 64, 6, 1
+        )
+        
+        # N , 64, 1, 1
+        self.decoder = torch.nn.Sequential(
+            torch.nn.ConvTranspose2d(128, 64, 15), # -> N, 32, 7, 7
+            torch.nn.ReLU(),
+            torch.nn.ConvTranspose2d(64, 32, 3, stride=2, padding=1, output_padding=1), # N, 16, 14, 14 (N,16,13,13 without output_padding)
+            torch.nn.ReLU(),
+            torch.nn.ConvTranspose2d(32, 16, 3, stride=2, padding=1, output_padding=1), # N, 16, 14, 14 (N,16,13,13 without output_padding)
+            torch.nn.ReLU(),
+            torch.nn.ConvTranspose2d(16, 1, 3, stride=2, padding=1, output_padding=1), # N, 1, 28, 28  (N,1,27,27)
+            torch.nn.Tanh()
+        )
 
+    def forward(self, x):
+        encoded = self.encoder(x)
+        decoded = self.decoder(encoded)
+        return decoded
 class NeuralNetworkPolicy:
     """
     A wrapper to train neural network model
@@ -45,6 +74,12 @@ class NeuralNetworkPolicy:
 
         # Base parameters
         self.model = model.to(self._device)
+
+        self.model_autoencoder = AE()
+        self.optimizer_autoencoder = torch.optim.Adam(self.model_autoencoder.parameters(),
+                             lr = 1e-3, weight_decay = 1e-5)
+        self.loss_function_auto = torch.nn.MSELoss()
+
         self.optimizer = optimizer
         self.storage_location = storage_location
         self.writer = SummaryWriter(self.storage_location)
@@ -58,6 +93,8 @@ class NeuralNetworkPolicy:
         self.episode = 0
 
         self.dataset = dataset
+
+        self.dataset_autoencoder = []
         # Load previous weights
         if "model_path" in kwargs:
             self.model.load_state_dict(torch.load(kwargs.get("model_path"), map_location=self._device))
@@ -78,6 +115,7 @@ class NeuralNetworkPolicy:
             current episode number
         """
         print("Starting episode #", str(episode))
+        original_observations = observations
         self.episode = episode
         self.model.episode = episode
         # Transform newly received data
@@ -107,6 +145,49 @@ class NeuralNetworkPolicy:
             # Logging
             self._logging(loss=running_loss, epoch=epoch)
 
+
+        '''Autoencoder training'''
+
+        print("Training autoencoder")
+
+        optimizer = self.optimizer_autoencoder
+        
+        # Validation using MSE Loss function
+
+        observations_auto = self._transform_autoencoder(original_observations)
+
+        dataloader_auto = self._get_dataloader_autoencoder(observations_auto)
+
+        epochs = 10
+        losses_epochs = []
+        
+        for epoch in range(epochs):
+            print("Epoch", epoch)
+            losses = []
+            for image in dataloader_auto:
+                
+            # Output of Autoencoder
+                reconstructed = self.model_autoencoder(image)
+                
+            # Calculating the loss function
+                loss = self.loss_function_auto(reconstructed, image)
+                #print(loss.item())
+                
+            # The gradients are set to zero,
+            # the the gradient is computed and stored.
+                optimizer.zero_grad()
+                loss.backward()
+                optimizer.step()
+                
+            # Storing the losses in a list for plotting
+                losses.append(loss.item())
+            loss_mean = sum(losses)/len(losses)
+            print("Mean loss", loss_mean)
+            losses_epochs.append(loss_mean)
+
+
+        print("Last epoch autoencoder mean loss", losses_epochs[-1])
+
         # Post training routine
         self._on_optimization_end()
 
@@ -129,8 +210,23 @@ class NeuralNetworkPolicy:
 
         return prediction
 
+
+    def autoencoder_predict(self, observation):
+
+        observation = self._transform_autoencoder([observation])
+        observation = torch.tensor(observation)
+        # Predict with model
+        reconstructed = self.model_autoencoder(observation)
+
+        loss = self.loss_function_auto(reconstructed, observation)
+
+
+        return loss
+
+
     def save(self):
         torch.save(self.model.state_dict(), os.path.join(self.storage_location, "model.pt"))
+        torch.save(self.model_autoencoder.state_dict(), "autoencoder.pt")
 
     def _transform(self, observations, expert_actions):
         # Resize images
@@ -161,6 +257,28 @@ class NeuralNetworkPolicy:
         expert_actions = [torch.tensor(expert_action).cpu().numpy() for expert_action in expert_actions]
 
         return observations, expert_actions
+
+    def _transform_autoencoder(self, observations):
+        input_shape = (160, 120)
+        observations = ([cv2.resize(observation, dsize=input_shape)
+            for observation in observations])
+        observations_gr = [Image.fromarray(cv2.cvtColor(observation, cv2.COLOR_BGR2GRAY) )for observation in observations]
+        compose_obs_gr = Compose([
+                ToTensor(),
+                Normalize(
+                (0.5), (0.5)
+                ), ])
+
+        observations_gr = [compose_obs_gr(observation).cpu().numpy() for observation in observations_gr]
+        return observations_gr
+#        pass
+    
+    def _get_dataloader_autoencoder(self, observations):
+        batch_size = 8  
+        self.dataset_autoencoder.extend(observations)
+        dataloader = DataLoader(self.dataset_autoencoder, batch_size=batch_size, shuffle=True)
+
+        return dataloader
 
     def _get_dataloader(self, observations, expert_actions):
         # Include new experiences

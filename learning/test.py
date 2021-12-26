@@ -15,6 +15,7 @@ def process_args():
     parser.add_argument("--map-name", "-m", default="loop_empty", type=str)
     parser.add_argument("--save-observations", "-so", action="store_true")
     parser.add_argument("--save-observations-path", "-sop", default="./learning/observations_sim", type=str)
+    parser.add_argument("--save-observations-autoencoder", "-soa", default="./learning/autoencoder_sim", type=str)
     return parser
 
 
@@ -32,6 +33,7 @@ if __name__ == "__main__":
 
     save_observs = False #config.save_observations
     save_observs_path  = config.save_observations_path
+    save_observs_autoencoder = config.save_observations_autoencoder
 
     if not (os.path.isfile(config.model_path)):
         raise Exception("Model File not found")
@@ -56,6 +58,7 @@ if __name__ == "__main__":
         episodes=task_episode,
         save_observs = save_observs,
         save_observs_path = save_observs_path,
+        save_observs_autoencoder = save_observs_autoencoder,
         alpha=0,
         test=True,
     )

@@ -1,0 +1,48 @@
+status: success
+msg: null
+scores:
+  per-episodes:
+    loop2-000-ego0:
+      deviation-heading: 15.64584847893021
+      in-drivable-lane: 0.0
+      deviation-center-line: 3.4887782519418673
+      driven_any: 12.506149146589902
+      driven_lanedir: 11.90891569441782
+      driven_lanedir_consec: 11.90891569441782
+      survival_time: 59.99999999999873
+      distance-from-start: 1.1050109898329152
+  deviation-heading_mean: 15.64584847893021
+  deviation-heading_median: 15.64584847893021
+  deviation-heading_min: 15.64584847893021
+  deviation-heading_max: 15.64584847893021
+  in-drivable-lane_mean: 0.0
+  in-drivable-lane_median: 0.0
+  in-drivable-lane_min: 0.0
+  in-drivable-lane_max: 0.0
+  deviation-center-line_mean: 3.4887782519418673
+  deviation-center-line_median: 3.4887782519418673
+  deviation-center-line_min: 3.4887782519418673
+  deviation-center-line_max: 3.4887782519418673
+  driven_any_mean: 12.506149146589902
+  driven_any_median: 12.506149146589902
+  driven_any_min: 12.506149146589902
+  driven_any_max: 12.506149146589902
+  driven_lanedir_mean: 11.90891569441782
+  driven_lanedir_median: 11.90891569441782
+  driven_lanedir_min: 11.90891569441782
+  driven_lanedir_max: 11.90891569441782
+  driven_lanedir_consec_mean: 11.90891569441782
+  driven_lanedir_consec_median: 11.90891569441782
+  driven_lanedir_consec_min: 11.90891569441782
+  driven_lanedir_consec_max: 11.90891569441782
+  survival_time_mean: 59.99999999999873
+  survival_time_median: 59.99999999999873
+  survival_time_min: 59.99999999999873
+  survival_time_max: 59.99999999999873
+  distance-from-start_mean: 1.1050109898329152
+  distance-from-start_median: 1.1050109898329152
+  distance-from-start_min: 1.1050109898329152
+  distance-from-start_max: 1.1050109898329152
+  simulation-passed: 1
+stats: {}
+ipfs_hashes: {}

@@ -111,7 +111,7 @@ class InteractiveImitationLearning:
         if self._episode <= 1:  # initial policy equals expert's
             control_policy = self.teacher
         else:
-            control_policy = self._mix()
+            control_policy = self._mix(observation)
 
         control_action = control_policy.predict(observation)
 
