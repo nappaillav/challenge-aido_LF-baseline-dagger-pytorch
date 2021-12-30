@@ -28,7 +28,10 @@ class DAgger(InteractiveImitationLearning):
         self.angle_limit = np.pi / 8
         self.distance_limit = 0.12
 
-    def _mix(self):
+        self.expert_calls = 0
+        self.learner_calls = 0
+
+    def _mix(self, observation):
         control_policy = np.random.choice(a=[self.teacher, self.learner], p=[self.alpha, 1.0 - self.alpha])
         if self._found_obstacle:
             return self.teacher
@@ -36,15 +39,32 @@ class DAgger(InteractiveImitationLearning):
             lp = self.environment.get_lane_pos2(self.environment.cur_pos, self.environment.cur_angle)
         except:
             return control_policy
+
+        '''
         if self.active_policy:
             # keep using tecaher untill duckiebot converges back on track
             if not (abs(lp.dist) < self.convergence_distance and abs(lp.angle_rad) < self.convergence_angle):
+                self.expert_calls += 1
+                teacher_action = self.teacher.predict(observation)
+                self._aggregate(observation, teacher_action)
                 return self.teacher
         else:
             # in case we are using our learner and it started to diverge a lot we need to give
             # control back to the expert
             if abs(lp.dist) > self.distance_limit or abs(lp.angle_rad) > self.angle_limit:
+                self.expert_calls += 1
+                teacher_action = self.teacher.predict(observation)
+                self._aggregate(observation, teacher_action)
                 return self.teacher
+        '''
+
+        if control_policy == self.learner:
+            self.learner_calls += 1
+        elif control_policy == self.teacher:
+            self.expert_calls += 1
+            teacher_action = self.teacher.predict(observation)
+            self._aggregate(observation, teacher_action)
+
         return control_policy
 
     def _on_episode_done(self):

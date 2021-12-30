@@ -1,7 +1,7 @@
 import numpy as np
 import os
 from PIL import Image
-
+import json 
 RISK_THRESHOLD = 0.5
 
 class InteractiveImitationLearning:
@@ -61,6 +61,7 @@ class InteractiveImitationLearning:
         self._found_obstacle = False
         # steering angle gain
         self.gain = 10
+        self.additional_expert_calls = 0
 
     def train(self, debug=False):
         """
@@ -82,6 +83,20 @@ class InteractiveImitationLearning:
             self._optimize()  # episodic learning
             self._on_episode_done()
 
+        print("Number of learner actions:", self.learner_calls)
+        print("Number of teacher actions", self.expert_calls)
+        print("Number of additional expert calls", self.additional_expert_calls)
+        print("Additional teacher portion", self.additional_expert_calls/(self.expert_calls + self.learner_calls))
+
+        res = {}
+        res["expert_actions"] = self.expert_calls
+        res["learner_actions"] = self.learner_calls
+        res["additional_expert_actions"] = self.additional_expert_calls
+        res["add_expert_portion"] = self.additional_expert_calls/(self.expert_calls + self.learner_calls)
+
+        with open("action_number.json", "w") as f:
+            json.dump(res, f)
+
     def _sampling(self):
         observation = self.environment.render_obs()
         for horizon in range(self._horizon):
@@ -101,10 +116,18 @@ class InteractiveImitationLearning:
     def _act(self, observation):
         if self._episode <= 1:  # initial policy equals expert's
             control_policy = self.teacher
+            control_action = control_policy.predict(observation)
+            self._aggregate(observation, control_action)
         else:
-            control_policy = self._mix()
+            control_policy = self._mix(observation)
 
-        control_action = control_policy.predict(observation)
+            control_action = control_policy.predict(observation)
+            if abs(control_action[2]) >= RISK_THRESHOLD and not self.test:
+                print("RISK", abs(control_action[2]))
+                self.additional_expert_calls += 1
+                control_policy = self.teacher
+                control_action = self.teacher.predict(observation)
+                self._aggregate(observation, self.teacher_action)
 
         self._query_expert(control_policy, control_action, observation)
 
@@ -115,9 +138,13 @@ class InteractiveImitationLearning:
         return control_action
 
     def _query_expert(self, control_policy, control_action, observation):
+        '''
+        
         if abs(control_action[2]) >= RISK_THRESHOLD and not self.test:
             control_policy = self.teacher
             control_action = self.teacher.predict(observation)
+        '''
+        
 
         if control_policy == self.learner:
             self.learner_action = control_action
@@ -129,8 +156,8 @@ class InteractiveImitationLearning:
         else:
             self.teacher_action = self.teacher.predict(observation)
 
-        if self.teacher_action is not None:
-            self._aggregate(observation, self.teacher_action)
+        #if self.teacher_action is not None:
+        #    self._aggregate(observation, self.teacher_action)
 
         if self.teacher_action[0] < 0.1:
             self._found_obstacle = True
@@ -152,9 +179,9 @@ class InteractiveImitationLearning:
             self._expert_actions.append(self._inject_noise(action))
         else:            
             img = Image.fromarray(observation, 'RGB')
-            name = 'observation' + str(self.observation_num) + policy_str + 'learner.png'
+            #name = 'observation' + str(self.observation_num) + policy_str + 'learner.png'
             
-            img.save(os.path.join(self.observation_save_path, name))
+            #img.save(os.path.join(self.observation_save_path, name))
             self.observation_num += 1
 
     def _optimize(self):
