@@ -152,6 +152,8 @@ class Dronet(nn.Module):
         is_speed_up, steering_angle = self.forward(images)
         is_speed_up = torch.sigmoid(is_speed_up)
         v_tensor = (is_speed_up) * self.max_velocity_tensor + (1 - is_speed_up) * self.min_velocity_tensor
+        #print("Steering angle rads", steering_angle.item())
+        #print("Steering angle degrees", steering_angle.item()*180/np.pi )
         steering_angle = steering_angle * self.max_steering
         output = torch.cat((v_tensor, steering_angle), 1).squeeze().detach()
         return output.cpu().numpy()

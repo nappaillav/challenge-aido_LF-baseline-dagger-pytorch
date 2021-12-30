@@ -9,7 +9,7 @@ from torchvision.transforms import ToTensor, Normalize, Compose
 from torch.utils.tensorboard import SummaryWriter
 import random
 # import torch 
-
+import csv
 from PIL import Image
 
 class NeuralNetworkPolicy_thrifty:
@@ -63,15 +63,20 @@ class NeuralNetworkPolicy_thrifty:
 
         self.dataset = dataset
 
+
         # Load previous weights
         if "model_path" in kwargs:
             m_path = kwargs.get("model_path")
             # print('Loaded from the Model path : {}'.format())
             self.model.load_state_dict(torch.load(m_path, map_location=self._device))
+    
             print("Loaded ")
+
+    
 
     def __del__(self):
         self.writer.close()
+    
 
     def optimize(self, observations, expert_actions, episode):
         """
@@ -165,14 +170,40 @@ class NeuralNetworkPolicy_thrifty:
             prediction = []
             for i in range(self.num_ensemble):
                 prediction.append(self.model[i].predict(observation.to(self._device)))
-            self.variance = np.square(np.std(prediction, axis=0)).mean()
+
+            '''normilize observations'''
+            #min_angle = -np.pi/2
+            #max_angle = np.pi/2
+            #prediction_mean = np.array(prediction).mean(axis=0)
+            #prediction_norm = np.array([[predict[0]/self.max_velocity, (predict[1] - min_angle)/(max_angle-min_angle)] 
+            #for predict in prediction])
+            #speed_norm = prediction_mean[0]/self.max_velocity
+            #angle_norm = (prediction_mean[1] - min_angle)/(max_angle - min_angle)
+            #angle_norm = prediction[1] - 
+            #variance_list = np.square(np.std(prediction_norm, axis=0)) # speed, angle
+
+       
+            self.variance = np.square(np.std(prediction, axis=0))[1]*1000
+            #print("Mean prediction", np.array(prediction_norm).mean(axis=0))
+            '''
+            if episode > 1:
+                #print()
+                with open("angle.csv", "a", newline='') as file:
+                    writer = csv.writer(file)
+                    writer.writerow([self.variance])
+
+                    print("Variance separate", self.variance)
+            #self.variance = np.square(np.std(prediction, axis=0))[1]
+            '''
             return np.array(prediction).mean(axis=0)
     
     def compute_var(self, observation):
+        observation, _ = self._transform([observation], [0])
+        observation = torch.tensor(observation)
         prediction = []
         for i in range(self.num_ensemble):
             prediction.append(self.model[i].predict(observation.to(self._device)))
-        return np.square(np.std(prediction, axis=0)).mean()
+        return np.square(np.std(prediction, axis=0))[1]*1000
 
     def save(self):
         for i in range(self.num_ensemble):

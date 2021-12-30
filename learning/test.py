@@ -13,13 +13,15 @@ def process_args():
     parser.add_argument("--num-outputs", "-n", default=2, type=int)
     parser.add_argument("--model-path", "-mp", default="", type=str)
     parser.add_argument("--map-name", "-m", default="loop_empty", type=str)
+    parser.add_argument("--randomize-map", "-rm", action="store_true")
+    parser.add_argument("--save-observations-autoencoder", "-soa", default="./learning/autoencoder_sim", type=str)
     return parser
 
 
 if __name__ == "__main__":
     parser = process_args()
     input_shape = (120, 160)
-    max_velocity = 0.7
+    max_velocity = 0.5
 
     config = parser.parse_args()
     # launching environment and testing on different maps using map randomization
@@ -42,13 +44,14 @@ if __name__ == "__main__":
         max_velocity=max_velocity,
         model_path=config.model_path,
     )
-
+    save_observs_autoencoder = config.save_observations_autoencoder
     algorithm = DAgger(
         env=environment,
         teacher=teacher(environment, max_velocity),
         learner=learner,
         horizon=task_horizon,
         episodes=task_episode,
+        save_observs_autoencoder = save_observs_autoencoder,
         alpha=0,
         test=True,
     )

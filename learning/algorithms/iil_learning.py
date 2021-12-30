@@ -2,7 +2,7 @@ import cv2
 from gym_duckietown.envs import DuckietownEnv
 import math 
 import numpy as np
-
+import json
 def launch_env(map_name, randomize_maps_on_reset=False, domain_rand=False):
     environment = DuckietownEnv(
         domain_rand=domain_rand,
@@ -68,6 +68,8 @@ class InteractiveImitationLearning:
         # steering angle gain
         self.gain = 10
 
+        self.observation_num = 0
+
     def train(self, debug=False):
         """
         Parameters
@@ -104,16 +106,33 @@ class InteractiveImitationLearning:
             print('-> Episode : {}'.format(episode))
             map_name = np.random.choice(possible_maps)
             print('-> Map Name : {}'.format(map_name))
+            '''
             self.environment = launch_env(
                 map_name,
                 domain_rand=False,
                 randomize_maps_on_reset=False,
             )
+            '''
             self._episode = episode
             self._sampling()
             self._optimize()  # episodic learning
             self._on_episode_done()
-            self._horizon = int(self._horizon_factor * self._horizon)
+            print("Self episode", self._episode)
+            #self._horizon = int(self._horizon_factor * self._horizon)
+
+        print("Number of learner actions:", self.learner_calls)
+        print("Number of teacher actions", self.expert_calls)
+        print("Number of additional expert calls", self.additional_expert_calls)
+        print("Additional teacher portion", self.additional_expert_calls/(self.expert_calls + self.learner_calls))
+
+        res = {}
+        res["expert_actions"] = self.expert_calls
+        res["learner_actions"] = self.learner_calls
+        res["additional_expert_actions"] = self.additional_expert_calls
+        res["add_expert_portion"] = self.additional_expert_calls/(self.expert_calls + self.learner_calls)
+
+        with open("action_number.json", "w") as f:
+            json.dump(res, f)
 
 
     def _sampling(self):
@@ -125,20 +144,24 @@ class InteractiveImitationLearning:
                 next_observation, reward, done, info = self.environment.step(
                     [action[0], action[1] * self.gain]
                 )
+                self.observation_num += 1
             except Exception as e:
                 print(e)
             if self._debug:
                 self.environment.render()
-                if self.test:
-                    cv2.imwrite('/content/drive/MyDrive/LF_Duckietown/out/{}_{}.png'.format(self._episode, horizon), observation)
+                #if self.test:
+                #    cv2.imwrite('/content/drive/MyDrive/LF_Duckietown/out/{}_{}.png'.format(self._episode, horizon), observation)
             observation = next_observation
 
     # execute current control policy
     def _act(self, observation):
-        if self._episode <= 4:  # initial policy equals expert's
+        if self._episode <= 1:  # initial policy equals expert's
             control_policy = self.teacher
+            control_action = control_policy.predict(observation)
+            self._aggregate(observation, control_action)
+
         else:
-            control_policy = self._mix()
+            control_policy = self._mix(observation)
 
         control_action = control_policy.predict(observation)
 
@@ -155,15 +178,16 @@ class InteractiveImitationLearning:
             self.learner_action = control_action    
         else:
             self.learner_action = self.learner.predict(observation)
-        var = self.learner.variance 
+        if not(self.test):
+            var = self.learner.variance 
 
         if control_policy == self.teacher:
             self.teacher_action = control_action
         else:
             self.teacher_action = self.teacher.predict(observation)
 
-        if self.teacher_action is not None or var > 0.15: 
-            self._aggregate(observation, self.teacher_action)
+        #if self.teacher_action is not None: # or var > 0.15: 
+        #    self._aggregate(observation, self.teacher_action)
 
         if self.teacher_action[0] < 0.1:
             self._found_obstacle = True
@@ -174,6 +198,8 @@ class InteractiveImitationLearning:
         raise NotImplementedError()
 
     def _aggregate(self, observation, action):
+
+
         if not (self.test):
             self._observations.append(observation)
             self._expert_actions.append(action)

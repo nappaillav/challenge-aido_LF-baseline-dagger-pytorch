@@ -36,6 +36,7 @@ def process_args():
     parser.add_argument("--num-outputs", "-n", default=2, type=int)
     parser.add_argument("--domain-rand", "-dr", action="store_true")
     parser.add_argument("--randomize-map", "-rm", action="store_true")
+    parser.add_argument("--save-observations-autoencoder", "-soa", default="./learning/autoencoder_sim", type=str)
     return parser
 
 
@@ -51,6 +52,8 @@ if __name__ == "__main__":
     max_velocity = 0.5
 
     config = parser.parse_args()
+
+    save_observs_autoencoder = config.save_observations_autoencoder
     # check for  storage path
     if not (os.path.isdir(config.save_path)):
         os.makedirs(config.save_path)
@@ -86,10 +89,11 @@ if __name__ == "__main__":
         learner=learner,
         horizon=task_horizon,
         episodes=task_episode,
+        save_observs_autoencoder = save_observs_autoencoder,
         alpha=mixing_decays[config.decay],
     )
 
-    algorithm.train(debug=False)  # DEBUG to show simulation
+    algorithm.train(debug=True)  # DEBUG to show simulation
 
     print('<===== Done ====>')
 
