@@ -1,5 +1,5 @@
 
-opencv-python==4.5.4.60
+opencv-python==4.5.5.62
 numpy==1.21.5
 aido-protocols-daffy==6.0.59
 duckietown-world-daffy==6.2.38

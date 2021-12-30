@@ -75,7 +75,7 @@ class NeuralNetworkPolicy:
         # Base parameters
         self.model = model.to(self._device)
 
-        self.model_autoencoder = AE()
+        self.model_autoencoder = AE().to(self._device)
         self.optimizer_autoencoder = torch.optim.Adam(self.model_autoencoder.parameters(),
                              lr = 1e-3, weight_decay = 1e-5)
         self.loss_function_auto = torch.nn.MSELoss()
@@ -158,7 +158,7 @@ class NeuralNetworkPolicy:
 
         dataloader_auto = self._get_dataloader_autoencoder(observations_auto)
 
-        epochs = 10
+        epochs = 5#0
         losses_epochs = []
         
         for epoch in range(epochs):
@@ -167,6 +167,7 @@ class NeuralNetworkPolicy:
             for image in dataloader_auto:
                 
             # Output of Autoencoder
+                image = image.to(self._device)
                 reconstructed = self.model_autoencoder(image)
                 
             # Calculating the loss function
@@ -216,6 +217,7 @@ class NeuralNetworkPolicy:
         observation = self._transform_autoencoder([observation])
         observation = torch.tensor(observation)
         # Predict with model
+        observation = observation.to(self._device)
         reconstructed = self.model_autoencoder(observation)
 
         loss = self.loss_function_auto(reconstructed, observation)
@@ -259,7 +261,7 @@ class NeuralNetworkPolicy:
         return observations, expert_actions
 
     def _transform_autoencoder(self, observations):
-        input_shape = (160, 120)
+        input_shape = (160, 120) # (80, 60)
         observations = ([cv2.resize(observation, dsize=input_shape)
             for observation in observations])
         observations_gr = [Image.fromarray(cv2.cvtColor(observation, cv2.COLOR_BGR2GRAY) )for observation in observations]

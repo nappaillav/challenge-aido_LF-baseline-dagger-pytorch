@@ -78,17 +78,21 @@ class InteractiveImitationLearning:
             self._sampling()
             self._optimize()  # episodic learning
             self._on_episode_done()
-        print("Number of learner actions:", self.learner_calls)
-        print("Number of teacher actions", self.expert_calls)
-        print("Teacher portion", self.expert_calls/(self.expert_calls + self.learner_calls))
 
-        res = {}
-        res["expert_actions"] = self.expert_calls
-        res["learner_actions"] = self.learner_calls
-        res["expert_portion"] = self.expert_calls/(self.expert_calls + self.learner_calls)
+        if not (self.test):
+            print("Number of learner actions:", self.learner_calls)
+            print("Number of teacher actions", self.expert_calls)
+            print("Number of additional expert calls", self.additional_expert_calls)
+            print("Additional teacher portion", self.additional_expert_calls/(self.expert_calls + self.learner_calls))
 
-        with open("action_number.json", "w") as f:
-            json.dump(res, f)
+            res = {}
+            res["expert_actions"] = self.expert_calls
+            res["learner_actions"] = self.learner_calls
+            res["additional_expert_actions"] = self.additional_expert_calls
+            res["add_expert_portion"] = self.additional_expert_calls/(self.expert_calls + self.learner_calls)
+
+            with open("action_number.json", "w") as f:
+                json.dump(res, f)
 
 
     def _sampling(self):
@@ -110,6 +114,9 @@ class InteractiveImitationLearning:
     def _act(self, observation):
         if self._episode <= 1:  # initial policy equals expert's
             control_policy = self.teacher
+            control_policy = self.teacher
+            control_action = control_policy.predict(observation)
+            self._aggregate(observation, control_action)
         else:
             control_policy = self._mix(observation)
 
@@ -137,8 +144,8 @@ class InteractiveImitationLearning:
         else:
             self.teacher_action = self.teacher.predict(observation)
 
-        if self.teacher_action is not None:
-            self._aggregate(observation, self.teacher_action)
+        #if self.teacher_action is not None:
+        #    self._aggregate(observation, self.teacher_action)
 
         if self.teacher_action[0] < 0.1:
             self._found_obstacle = True

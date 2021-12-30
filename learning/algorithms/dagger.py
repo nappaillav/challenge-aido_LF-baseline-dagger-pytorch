@@ -41,6 +41,8 @@ class DAgger(InteractiveImitationLearning):
         self.observation_teacher_path = os.path.join(self.observation_save_path, "teacher")
         self.observation_learner_path = os.path.join(self.observation_save_path, "learner")
 
+        self.additional_expert_calls = 0
+
         self.expert_calls = 0
         self.learner_calls = 0
         self.obs_auto = 0
@@ -69,7 +71,7 @@ class DAgger(InteractiveImitationLearning):
             if abs(lp.dist) > self.distance_limit or abs(lp.angle_rad) > self.angle_limit:
                 return self.teacher
         '''
-        if loss_auto > 0.05:
+        if loss_auto > 0.02:
             observation = cv2.resize(observation, dsize=input_shape[::-1])
             #print("loss", loss_auto)
             img = Image.fromarray(observation, 'RGB')
@@ -82,13 +84,22 @@ class DAgger(InteractiveImitationLearning):
                 img.save(os.path.join(self.observation_autoencoder_path, name))
                 self.obs_auto += 1
                 print("loss", loss_auto)
+
+            self.additional_expert_calls += 1
+            self.expert_calls += 1
+            teacher_action = self.teacher.predict(observation)
+            self._aggregate(observation, teacher_action)
             return self.teacher
 
 
         if control_policy == self.learner:
             self.learner_calls += 1
+            #print("LEARNER")
         elif control_policy == self.teacher:
             self.expert_calls += 1
+            teacher_action = self.teacher.predict(observation)
+            self._aggregate(observation, teacher_action)
+            #print("EXPERT")
         return control_policy
 
     def _on_episode_done(self):
